@@ -216,15 +216,6 @@ Result SimpleDs::eventProcess(const Identity&, Event& event) {
 }
 
 Result SimpleDs::identityOpenDs(const Identity&) {
-//    if (bmpData.isEmpty()) {
-//        // init the image data
-//        QResource res(QStringLiteral("/image.bmp"));
-//        bmpData = qUncompress(res.data(), static_cast<int>(res.size()));
-//        if (bmpData.isEmpty()) {
-//            return { ReturnCode::Failure, ConditionCode::LowMemory };
-//        }
-//    }
-
 	// init caps
 	// there are caps a minimal source must support
 	// query -> says which operations a cap supports
@@ -458,6 +449,7 @@ Result SimpleDs::userInterfaceEnable(const Identity&, UserInterface& ui) {
     auto cancelFunction1 = [this](QString oldTwainPath) {
         //恢复TWain工作目录
         QDir::setCurrent(oldTwainPath);
+        engine->exit(-1);
         notifyCloseCancel();
     };
     TwGlue glue1 = { scanFunction1, cancelFunction1 };

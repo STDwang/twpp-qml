@@ -47,6 +47,7 @@ signals:
     void imageOutput();
     void sendCameraList(QVariantList data);
 public slots:
+    void exit();
     void getCameraList();
     void grabImage(QImage image);
     void selectCamera(QString camera);

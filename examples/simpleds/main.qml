@@ -8,6 +8,9 @@ ApplicationWindow {
     title: qsTr("twainTest")
     color: "#1E1E1E"
     modality: Qt.NonModal
+    onClosing: {
+        camersever.exit();
+    }
 
     //存储全局变量。
     property QtObject global: QtObject{

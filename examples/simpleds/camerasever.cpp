@@ -56,9 +56,6 @@ QtCamera::QtCamera(QCameraInfo cameraInfo, QObject *parent, const TwGlue& glue) 
     m_glue(glue)
 {
     m_started = false;
-    m_camera = NULL;
-    m_cameraCapture = NULL;
-
     cameras = QCameraInfo::availableCameras();
     foreach (cameraInfo, cameras) {
         cameraNames.push_back(cameraInfo.description());
@@ -71,15 +68,19 @@ QtCamera::QtCamera(QCameraInfo cameraInfo, QObject *parent, const TwGlue& glue) 
 
 QtCamera::~QtCamera()
 {
+    qDebug()<<"~QtCamera()";
     if(isStarted()) stop();
     if (m_camera != NULL) {
         delete m_camera;
         m_camera = NULL;
     }
-    if (m_cameraCapture != NULL) {
-        delete m_cameraCapture;
-        m_cameraCapture = NULL;
-    }
+    delete m_cameraCapture;
+    m_cameraCapture = NULL;
+    delete m_pImageProvider;
+    m_pImageProvider = NULL;
+}
+
+void QtCamera::exit(){
     m_glue.m_cancel(oldTwainPath);
 }
 
@@ -140,15 +141,12 @@ bool QtCamera::capture()
     }
     m_glue.m_scan(m_pImageProvider->img);
     return true;
-    //return m_image.save(filePath, "jpg");
 }
 
 void QtCamera::grabImage(QImage image)
 {
     QMatrix matrix;
     matrix.rotate(180);
-    QImage imgRatate = image.transformed(matrix);
-    //m_image = image.mirrored(false, true);
-    m_pImageProvider->img = imgRatate;
+    m_pImageProvider->img = image.transformed(matrix);
     emit imageOutput();
 }
