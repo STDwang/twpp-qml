@@ -4,33 +4,33 @@ Portable, header-only TWAIN framework for C++11 and later.
 
 I wrote a demo of the qtquick program based on https://github.com/xricht17/twpp, and fixed some bugs that existed when the original project reproduced：
 
-- 使用msvc编译器，可能出现 error LNK2019: 无法解析的外部符号 _imp_EnableWindow 等
+- With msvc compiler, error LNK2019: unresolved external symbol _imp_EnableWindow etc. may appear
 
-> 解决方案：
+> solution：
 >
-> pro里加一行：LIBS += -lUser32
+> Add a line to pro: LIBS += -lUser32
 
-- 测试程序搜索不到我们的.ds对应设备信息
+- The test program cannot search for our .ds corresponding device information
 
-> 解决方案：
+> solution：
 >
-> 使用查看动态库依赖的软件如DependenciesGui查看.ds文件的库依赖，将缺少的动态库放入.ds文件目录下
+> Use software for viewing dynamic library dependencies, such as DependenciesGui, to view the library dependencies of the .ds file, and put the missing dynamic library in the .ds file directory
 
-- 测试程序无法打开.ds的GUI画面，报错： This application failed to start because it could not find or load the Qt platform plugin "windows" 或相似错误
+- The test program cannot open the GUI of .ds, and an error is reported: This application failed to start because it could not find or load the Qt platform plugin "windows" or similar errors
 
-> 解决方案：
+> solution：
 >
 > 在simpleds.cpp的userInterfaceEnable函数中新增代码
 >
-> 原因：.ds文件的运行环境和测试程序的运行环境不一致，因此可能找不到在.ds文件目录下的windows依赖库
+> Reason: The running environment of the .ds file is inconsistent with the running environment of the test program, so the windows dependent library in the directory of the .ds file may not be found
 >
-> 目的：将.ds文件所在目录加入到加载链接库的环境中
+> Purpose: Add the directory where the .ds file is located to the environment where the link library is loaded
 
 - plugin cannot be loaded for module "QtQuick.Controls": Cannot load library C:\Windows\twain_32\simpleds\QtQuick\Controls.2\qtquickcontrols2plugin.dll: The specified module could not be found.
 
-> 解决方案：
+> solution：
 >
-> 将当前工作目录修改为.ds文件所在目录，在qml程序退出时将工作目录修改回原测试程序所在目录
+> Change the current working directory to the directory where the .ds file is located, and change the working directory back to the directory where the original test program is located when the qml program exits
 
 Contents
 --------
