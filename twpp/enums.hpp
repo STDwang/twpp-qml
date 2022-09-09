@@ -1033,6 +1033,7 @@ enum class Mirror : UInt16 {
 };
 
 /// Values of possible actions of TWAIN operations.
+/// TWAIN 操作的可能操作的值。
 enum class Msg : UInt16 {
     Null = 0x0000,
     Get = 0x0001,

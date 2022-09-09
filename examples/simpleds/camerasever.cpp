@@ -70,10 +70,6 @@ QtCamera::~QtCamera()
 {
     qDebug()<<"~QtCamera()";
     if(isStarted()) stop();
-    if (m_camera != NULL) {
-        delete m_camera;
-        m_camera = NULL;
-    }
     delete m_cameraCapture;
     m_cameraCapture = NULL;
     delete m_pImageProvider;
@@ -81,6 +77,11 @@ QtCamera::~QtCamera()
 }
 
 void QtCamera::exit(){
+    if(isStarted()) stop();
+    if (m_camera != NULL) {
+        delete m_camera;
+        m_camera = NULL;
+    }
     m_glue.m_cancel(oldTwainPath);
 }
 

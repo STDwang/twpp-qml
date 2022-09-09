@@ -65,38 +65,47 @@ struct DoNotFreeHandle {
     std::is_base_of<Twpp::SourceFromThis<SourceClass, true>, SourceClass>::value,\
     "Class " #SourceClass " is not derived from SourceFromThis."\
     );\
+    qDebug()<<"DS_Entry --> SourceClass::entry";\
     return SourceClass::entry(origin, dg, dat, msg, data);\
 }
 
 /// Result of a data source operation.
 /// Contains both return code and status.
+/// 数据源操作的结果。
+/// 包含返回码和状态。
 class Result {
 
 public:
     /// Creates successful result.
+    /// 创建成功的结果。
     constexpr Result() noexcept :
         m_status(), m_rc(ReturnCode::Success) {}
 
     /// Creates result with supplied return code and status.
+    /// 使用提供的返回代码和状态创建结果。
     constexpr Result(ReturnCode rc, Status status) noexcept :
         m_status(status), m_rc(rc) {}
 
     /// Status part of the result.
+    /// 结果的状态部分。
     constexpr Status status() const noexcept {
         return m_status;
     }
 
     /// Return code part of the result.
+    /// 返回结果的代码部分。
     constexpr ReturnCode returnCode() const noexcept {
         return m_rc;
     }
 
     /// Sets status part of the result.
+    /// 设置结果的状态部分。
     void setStatus(Status status) noexcept {
         m_status = status;
     }
 
     /// Sets return code part of the result.
+    /// 设置结果的返回代码部分。
     void setReturnCode(ReturnCode rc) noexcept {
         m_rc = rc;
     }
@@ -144,10 +153,13 @@ TWPP_DETAIL_CREATE_HAS_STATIC_METHOD(staticCustomBase)
 namespace SourceFromThisProcs {
 
 /// Returns data source identity not associated with any instance.
+/// 返回不与任何实例关联的数据源标识。
 const Identity& defaultIdentity();
 
 /// Processes custom TWAIN operations without having any opened connection.
 /// DataGroup is always Control.
+/// 在没有任何打开的连接的情况下处理自定义 TWAIN 操作。
+/// 数据组始终是控制。
 /// \param dat Type of data. Dat::CustomBase + X.
 /// \param msg Message, action to perform.
 /// \param data The data, may be null.
@@ -173,6 +185,23 @@ Result staticCustomBase(Dat dat, Msg msg, void* data);
 /// \tparam Derived The class inheriting from this.
 /// \tparam hasStaticCustomBaseProc {Whether the Derived
 ///     class handles static custom base operations, see above.}
+/// 
+/// TWAIN 数据源的基类。
+/// 它处理实例创建和所有静态调用。
+///
+/// 派生类必须：
+/// 1) 至少实现所有纯虚方法。
+/// 2) 提供`static const Identity& defaultIdentity()`。
+/// 3) 如果 hasStaticCustomBaseProc == true，提供
+/// `static Result staticCustomBase(Dat dat, Msg msg, void* data)`.
+///
+/// 定义你的源类后，不要忘记使用宏
+/// TWPP_ENTRY(<name-of-your-class>)
+/// 其中名称是文字，而不是字符串：
+///
+/// TWPP_ENTRY(Source) // <- 不需要分号
+/// \tparam Derived 继承自 this 的类。
+/// \tparam hasStaticCustomBaseProc {是否派生类处理静态自定义基本操作，见上文。}
 template<typename Derived, bool hasStaticCustomBaseProc = false>
 class SourceFromThis {
 
@@ -187,30 +216,36 @@ public:
 
 protected:
     /// Creates closed instance.
+    /// 创建封闭实例。
     constexpr SourceFromThis() noexcept :
         m_lastStatus(ConditionCode::Bummer), m_state(DsState::Closed) {}
 
     /// The last TWAIN status.
+    /// 最后的 TWAIN 状态。
     Status lastStatus() const noexcept {
         return m_lastStatus;
     }
 
     /// Current TWAIN state.
+    /// 当前 TWAIN 状态。
     DsState state() const noexcept {
         return m_state;
     }
 
     /// Whether the source is in the supplied TWAIN state.
+    /// 源是否处于提供的 TWAIN 状态。
     bool inState(DsState state) const noexcept {
         return m_state == state;
     }
 
     /// Whether the source is between min and max states (both inclusive).
+    /// 源是否在最小和最大状态之间（包括两者）。
     bool inState(DsState min, DsState max) const noexcept {
         return m_state >= min && m_state <= max;
     }
 
     /// Whether there exists an enabled source.
+    /// 是否存在启用的源。
     static bool hasEnabled() noexcept {
         for (auto& src : g_sources) {
             if (src.inState(DsState::Enabled, DsState::Xferring)) {
@@ -222,82 +257,98 @@ protected:
     }
 
     /// Source identity.
+    /// 源标识。
     const Identity& sourceIdentity() const noexcept {
         return m_srcId;
     }
 
     /// Identity of the application that opened the source.
+    /// 打开源的应用程序的标识。
     const Identity& applicationIdentity() const noexcept {
         return m_appId;
     }
 
     /// Sets current TWAIN state, use with care.
+    /// 设置当前的 TWAIN 状态，小心使用。
     void setState(DsState state) noexcept {
         m_state = state;
     }
 
     /// Sets current source identity, use with care.
+    /// 设置当前源标识，谨慎使用。
     void setSourceIdentity(const Identity& sourceIdentity) noexcept {
         m_srcId = sourceIdentity;
     }
 
     /// Sets current application identity, use with care.
+    /// 设置当前应用程序标识，谨慎使用。
     void setApplicationIdentity(const Identity& appIdentity) noexcept {
         m_appId = appIdentity;
     }
 
     /// Shortcut for Result(RC::Success, CC::Success).
+    /// 结果的快捷方式(RC::Success, CC::Success)。
     static constexpr Result success() noexcept {
         return { ReturnCode::Success, ConditionCode::Success };
     }
 
     /// Shortcut for Result(RC::Failure, CC::BadValue).
+    /// 结果的快捷方式(RC::Failure, CC::BadValue)。
     static constexpr Result badValue() noexcept {
         return { ReturnCode::Failure, ConditionCode::BadValue };
     }
 
     /// Shortcut for Result(RC::Failure, CC::BadProtocol).
+    /// 结果的快捷方式(RC::Failure, CC::BadProtocol)。
     static constexpr Result badProtocol() noexcept {
         return { ReturnCode::Failure, ConditionCode::BadProtocol };
     }
 
     /// Shortcut for Result(RC::Failure, CC::SeqError).
+    /// 结果的快捷方式(RC::Failure, CC::SeqError)。
     static constexpr Result seqError() noexcept {
         return { ReturnCode::Failure, ConditionCode::SeqError };
     }
 
     /// Shortcut for Result(RC::Failure, CC::CapBadOperation).
+    /// 结果的快捷方式(RC::Failure, CC::CapBadOperation)。
     static constexpr Result capBadOperation() noexcept {
         return { ReturnCode::Failure, ConditionCode::CapBadOperation };
     }
 
     /// Shortcut for Result(RC::Failure, CC::CapUnsupported).
+    /// 结果的快捷方式(RC::Failure, CC::CapUnsupported)。
     static constexpr Result capUnsupported() noexcept {
         return { ReturnCode::Failure, ConditionCode::CapUnsupported };
     }
 
     /// Shortcut for Result(RC::Failure, CC::Bummber).
+    /// 结果的快捷方式(RC::Failure, CC::Bummber)。
     static constexpr Result bummer() noexcept {
         return { ReturnCode::Failure, ConditionCode::Bummer };
     }
 
 
     /// Notifies application about clicking on OK button.
+    /// 通知应用程序单击确定按钮。
     ReturnCode notifyCloseOk() noexcept {
         return notifyApp(Msg::CloseDsOk);
     }
 
     /// Notifies application about clicking on Cancel button.
+    /// 通知应用程序单击取消按钮。
     ReturnCode notifyCloseCancel() noexcept {
         return notifyApp(Msg::CloseDsReq);
     }
 
     /// Notifies application about a device event.
+    /// 通知应用程序有关设备事件。
     ReturnCode notifyDeviceEvent() noexcept {
         return notifyApp(Msg::DeviceEvent);
     }
 
     /// Notifies application about ready transfer (after clicking scan button is GUI is shown).
+    /// 通知应用程序准备好传输（单击扫描按钮后显示 GUI）。
     ReturnCode notifyXferReady() noexcept {
         return notifyApp(Msg::XferReady);
     }
@@ -305,12 +356,14 @@ protected:
 
 
     /// Root of source TWAIN calls.
+    /// 源 TWAIN 调用的根。
     /// \param origin Identity of the caller.
     /// \param dg Data group of the call.
     /// \param dat Type of data.
     /// \param msg Message, action to perform.
     /// \param data The data, may be null.
     virtual Result call(const Identity& origin, DataGroup dg, Dat dat, Msg msg, void* data) {
+        qDebug()<<"call           DataGroup  Dat  Msg: " + QString::number(UInt16(dg)) + "    " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
         switch (dg) {
         case DataGroup::Control:
             return control(origin, dat, msg, data);
@@ -328,11 +381,13 @@ protected:
     }
 
     /// Root of source control TWAIN calls.
+    /// 源代码控制 TWAIN 调用的根。
     /// \param origin Identity of the caller.
     /// \param dat Type of data.
     /// \param msg Message, action to perform.
     /// \param data The data, may be null.
     virtual Result control(const Identity& origin, Dat dat, Msg msg, void* data) {
+        qDebug() << "control                   Dat  Msg:      " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
         if (!data) {
             // all control triplets require data
             return badValue();
@@ -377,6 +432,10 @@ protected:
     /// Reset, set and set constraint operations are limited to
     /// state DsState::Open (4), override this method if you
     /// support CapType::ExtendedCaps.
+    /// 能力 TWAIN 调用。
+    /// 重置、设置和设置约束操作仅限于
+    /// 状态 DsState::Open (4)，如果你重写这个方法
+    /// 支持 CapType::ExtendedCaps。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Capability data.
@@ -465,22 +524,26 @@ protected:
 
     /// Get capability TWAIN call.
     /// Always called in correct state.
+    /// 获取能力 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param data Capability data.
     virtual Result capabilityGet(const Identity& origin, Capability& data) = 0;
 
     /// Get current capability TWAIN call.
     /// Always called in correct state.
+    /// 获取当前能力 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param data Capability data.
     virtual Result capabilityGetCurrent(const Identity& origin, Capability& data) = 0;
 
     /// Get default capability TWAIN call.
+    /// 获取默认能力 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param data Capability data.
     virtual Result capabilityGetDefault(const Identity& origin, Capability& data) = 0;
 
     /// Get help capability TWAIN call.
+    /// 获取帮助功能 TWAIN 呼叫。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -491,6 +554,7 @@ protected:
     }
 
     /// Get label capability TWAIN call.
+    /// 获取标签功能 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -501,6 +565,7 @@ protected:
     }
 
     /// Get label enum capability TWAIN call.
+    /// 获取标签枚举能力 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -511,12 +576,14 @@ protected:
     }
 
     /// Query support capability TWAIN call.
+    /// 查询支持能力 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Capability data.
     virtual Result capabilityQuerySupport(const Identity& origin, Capability& data) = 0;
 
     /// Reset capability TWAIN call.
+    /// 重置能力 TWAIN 调用。
     /// Always called in correct state: 4, if you support extended
     /// capabilities, override `capability` method.
     /// \param origin Identity of the caller.
@@ -524,11 +591,13 @@ protected:
     virtual Result capabilityReset(const Identity& origin, Capability& data) = 0;
 
     /// Reset all capability TWAIN call.
+    /// 重置所有能力 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     virtual Result capabilityResetAll(const Identity& origin) = 0;
 
     /// Set capability TWAIN call.
+    /// 设置能力 TWAIN 调用。
     /// Always called in correct state: 4, if you support extended
     /// capabilities, override `capability` method.
     /// \param origin Identity of the caller.
@@ -536,6 +605,7 @@ protected:
     virtual Result capabilitySet(const Identity& origin, Capability& data) = 0;
 
     /// Set capability TWAIN call.
+    /// 设置能力 TWAIN 调用。
     /// Always called in correct state: 4, if you support extended
     /// capabilities, override `capability` method.
     /// Default implementation does nothing.
@@ -549,6 +619,7 @@ protected:
 
 
     /// Custom data TWAIN call.
+    /// 自定义数据 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Custom data.
@@ -570,6 +641,7 @@ protected:
     }
 
     /// Get custom data TWAIN call.
+    /// 获取自定义数据 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -580,6 +652,7 @@ protected:
     }
 
     /// Set custom data TWAIN call.
+    /// 设置自定义数据 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -590,6 +663,7 @@ protected:
     }
 
     /// Device event TWAIN call.
+    /// 设备事件 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Device event data.
@@ -602,6 +676,7 @@ protected:
     }
 
     /// Get device event TWAIN call.
+    /// 获取设备事件 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -614,6 +689,7 @@ protected:
 
 
     /// Event TWAIN call.
+    /// 事件 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Event data.
@@ -631,12 +707,14 @@ protected:
 
 #if defined(TWPP_DETAIL_OS_WIN) || defined(TWPP_DETAIL_OS_MAC)
     /// Process event TWAIN call.
+    /// 处理事件 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Event data.
     virtual Result eventProcess(const Identity& origin, Event& data) = 0;
 #elif defined(TWPP_DETAIL_OS_LINUX)
     /// Process event TWAIN call.
+    /// 处理事件 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -650,6 +728,7 @@ protected:
 #endif
 
     /// Identity TWAIN call.
+    /// 身份 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Identity data.
@@ -695,16 +774,19 @@ protected:
     }
 
     /// Open source identity TWAIN call.
+    /// 开源身份 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     virtual Result identityOpenDs(const Identity& origin) = 0;
 
     /// Close source identity TWAIN call.
+    /// 关闭源标识 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     virtual Result identityCloseDs(const Identity& origin) = 0;
 
     /// File system TWAIN call.
+    /// 文件系统 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data File system data.
@@ -791,6 +873,7 @@ protected:
 
     /// Automatic capture directory file system TWAIN call.
     /// Always called in correct state.
+    /// 自动捕获目录文件系统 TWAIN 调用。
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
     /// \param data File system data.
@@ -800,6 +883,7 @@ protected:
     }
 
     /// Change directory file system TWAIN call.
+    /// 更改目录文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -811,6 +895,7 @@ protected:
 
 
     /// Copy file system TWAIN call.
+    /// 复制文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -821,6 +906,7 @@ protected:
     }
 
     /// Create directory file system TWAIN call.
+    /// 创建目录文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -831,6 +917,7 @@ protected:
     }
 
     /// Delete file system TWAIN call.
+    /// 删除文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -841,6 +928,7 @@ protected:
     }
 
     /// Format media file system TWAIN call.
+    /// 格式化媒体文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -851,6 +939,7 @@ protected:
     }
 
     /// Get close file system TWAIN call.
+    /// 获取关闭文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -861,6 +950,7 @@ protected:
     }
 
     /// Get first file file system TWAIN call.
+    /// 获取第一个文件文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -871,6 +961,7 @@ protected:
     }
 
     /// Get info file system TWAIN call.
+    /// 获取信息文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -881,6 +972,7 @@ protected:
     }
 
     /// Get next file file system TWAIN call.
+    /// 获取下一个文件文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -891,6 +983,7 @@ protected:
     }
 
     /// Rename file system TWAIN call.
+    /// 重命名文件系统 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -902,6 +995,7 @@ protected:
 
 
     /// Pass through TWAIN call.
+    /// 通过 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Pass through data.
@@ -915,6 +1009,7 @@ protected:
     }
 
     /// Pass through pass through TWAIN call.
+    /// 通过 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -925,6 +1020,7 @@ protected:
     }
 
     /// Pending xfers TWAIN call.
+    /// 等待 转让 TWAIN 呼叫。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Pending xfers data.
@@ -994,24 +1090,28 @@ protected:
     }
 
     /// Get pending xfers TWAIN call.
+    /// 获取待处理的 转让 TWAIN 呼叫。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Pending xfers data.
     virtual Result pendingXfersGet(const Identity& origin, PendingXfers& data) = 0;
 
     /// End xfer pending xfers TWAIN call.
+    /// 结束 转让 挂起的 转让 TWAIN 呼叫。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Pending xfers data.
     virtual Result pendingXfersEnd(const Identity& origin, PendingXfers& data) = 0;
 
     /// Reset xfers pending xfers TWAIN call.
+    /// 重置 转让 挂起的 转让 TWAIN 呼叫。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Pending xfers data.
     virtual Result pendingXfersReset(const Identity& origin, PendingXfers& data) = 0;
 
     /// Stop feeder pending xfers TWAIN call.
+    /// 停止馈线挂起的 转让 TWAIN 呼叫。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1022,6 +1122,7 @@ protected:
     }
 
     /// Setup file xfer TWAIN call.
+    /// 设置文件 转让 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Setup file xfer data.
@@ -1061,6 +1162,7 @@ protected:
     }
 
     /// Get setup file xfer TWAIN call.
+    /// 获取设置文件 转让 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1071,6 +1173,7 @@ protected:
     }
 
     /// Get default setup file xfer TWAIN call.
+    /// 获取默认设置文件 转让 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1081,6 +1184,7 @@ protected:
     }
 
     /// Set setup file xfer TWAIN call.
+    /// 设置设置文件 转让 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1091,6 +1195,7 @@ protected:
     }
 
     /// Reset setup file xfer TWAIN call.
+    /// 重置设置文件 转让 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1101,6 +1206,7 @@ protected:
     }
 
     /// Setup memory xfer TWAIN call.
+    /// 设置内存 转让 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Setup memory xfer data.
@@ -1117,12 +1223,14 @@ protected:
     }
 
     /// Get setup memory xfer TWAIN call.
+    /// 获取设置内存 转让 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Setup memory xfer data.
     virtual Result setupMemXferGet(const Identity& origin, SetupMemXfer& data) = 0;
 
     /// Status TWAIN call.
+    /// 状态 TWAIN 呼叫。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Status data.
@@ -1135,6 +1243,7 @@ protected:
     }
 
     /// Get status TWAIN call.
+    /// 获取状态 TWAIN 呼叫。
     /// Always called in correct state.
     /// Default implementation returns last status.
     /// \param origin Identity of the caller.
@@ -1146,6 +1255,7 @@ protected:
     }
 
     /// Status utf8 TWAIN call.
+    /// 状态 utf8 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Status utf8 data.
@@ -1159,6 +1269,7 @@ protected:
     }
 
     /// Get status utf8 TWAIN call.
+    /// 获取状态 utf8 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1170,6 +1281,7 @@ protected:
     }
 
     /// User interface TWAIN call.
+    /// 用户界面 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data User interface data.
@@ -1220,24 +1332,28 @@ protected:
     }
 
     /// Disable user interface TWAIN call.
+    /// 禁用用户界面 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data User interface data.
     virtual Result userInterfaceDisable(const Identity& origin, UserInterface& data) = 0;
 
     /// Enable user interface TWAIN call.
+    /// 启用用户界面 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data User interface data.
     virtual Result userInterfaceEnable(const Identity& origin, UserInterface& data) = 0;
 
     /// Enable UI only user interface TWAIN call.
+    /// 启用仅 UI 用户界面 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data User interface data.
     virtual Result userInterfaceEnableUiOnly(const Identity& origin, UserInterface& data) = 0;
 
     /// Xfer group TWAIN call.
+    /// 转发 组 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Xfer group data.
@@ -1263,6 +1379,7 @@ protected:
     }
 
     /// Get xfer group TWAIN call.
+    /// 获取 转发 组 TWAIN 呼叫。
     /// Always called in correct state.
     /// Default implementation returns DataGroup::Image.
     /// \param origin Identity of the caller.
@@ -1274,6 +1391,7 @@ protected:
     }
 
     /// Set xfer group TWAIN call.
+    /// 设置 转发 组 TWAIN 呼叫。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1289,6 +1407,13 @@ protected:
     ///     ExtImageInfo: reinterpret_cast<ExtImageInfo&>(data)
     ///     GrayResponse: reinterpret_cast<GrayResponse&>(data)
     ///     RgbResponse: reinterpret_cast<RgbResponse&>(data)
+    ///
+    /// 源图像 TWAIN 调用的根。
+    ///
+    /// 类型转换的特殊数据：
+    /// ExtImageInfo: reinterpret_cast<ExtImageInfo&>(data)
+    /// GrayResponse: reinterpret_cast<GrayResponse&>(data)
+    /// RgbResponse: reinterpret_cast<RgbResponse&>(data)
     ///
     /// \param origin Identity of the caller.
     /// \param dat Type of data.
@@ -1345,6 +1470,7 @@ protected:
                         }*/
 
     /// Ext image info TWAIN call.
+    /// 外部图像信息 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Ext image info data.
@@ -1361,6 +1487,7 @@ protected:
     }
 
     /// Get ext image info TWAIN call.
+    /// 获取 外部 图像信息 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1371,6 +1498,7 @@ protected:
     }
 
     /// Gray response TWAIN call.
+    /// 灰色响应 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Gray response data.
@@ -1392,6 +1520,7 @@ protected:
     }
 
     /// Set gray response TWAIN call.
+    /// 设置灰色响应 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1412,6 +1541,7 @@ protected:
     }
 
     /// ICC profile TWAIN call.
+    /// ICC 配置文件 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data ICC profile data.
@@ -1428,6 +1558,7 @@ protected:
     }
 
     /// Get ICC profile TWAIN call.
+    /// 获取 ICC 配置文件 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1438,6 +1569,7 @@ protected:
     }
 
     /// Image file xfer TWAIN call.
+    /// 图像文件 转发 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     virtual Result imageFileXfer(const Identity& origin, Msg msg) {
@@ -1458,6 +1590,7 @@ protected:
     }
 
     /// Get image file xfer TWAIN call.
+    /// 获取图像文件 转发 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// Always called in correct state.
@@ -1468,6 +1601,7 @@ protected:
     }
 
     /// Image info TWAIN call.
+    /// 图像信息 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Image info data.
@@ -1484,6 +1618,7 @@ protected:
     }
 
     /// Get image info TWAIN call.
+    /// 获取图像信息 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Image info data.
@@ -1491,6 +1626,7 @@ protected:
 
 
     /// Image layout TWAIN call.
+    /// 图像布局 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Image layout data.
@@ -1530,24 +1666,28 @@ protected:
     }
 
     /// Get image layout TWAIN call.
+    /// 获取图像布局 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Image layout data.
     virtual Result imageLayoutGet(const Identity& origin, ImageLayout& data) = 0;
 
     /// Get default image layout TWAIN call.
+    /// 获取默认图像布局 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Image layout data.
     virtual Result imageLayoutGetDefault(const Identity& origin, ImageLayout& data) = 0;
 
     /// Set image layout TWAIN call.
+    /// 设置图像布局 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Image layout data.
     virtual Result imageLayoutSet(const Identity& origin, ImageLayout& data) = 0;
 
     /// Reset image layout TWAIN call.
+    /// 重置图像布局 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Image layout data.
@@ -1555,6 +1695,7 @@ protected:
 
 
     /// Image memory file xfer TWAIN call.
+    /// 图像内存文件 转发 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Image memory file xfer data.
@@ -1576,6 +1717,7 @@ protected:
     }
 
     /// Get image memory file xfer TWAIN call.
+    /// 获取图像内存文件 转发 TWAIN 调用
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1586,6 +1728,7 @@ protected:
     }
 
     /// Image memory xfer TWAIN call.
+    /// 图像存储器 xfer TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Image memory xfer data.
@@ -1607,12 +1750,14 @@ protected:
     }
 
     /// Get image memory xfer TWAIN call.
+    /// 获取图像内存 转发 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Image memory xfer data.
     virtual Result imageMemXferGet(const Identity& origin, ImageMemXfer& data) = 0;
 
     /// Image native xfer TWAIN call.
+    /// 图像原生 转发 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Handle to image native xfer data.
@@ -1634,12 +1779,14 @@ protected:
     }
 
     /// Get image native xfer TWAIN call.
+    /// 获取图像原生 转发 TWAIN 调用。
     /// Always called in correct state.
     /// \param origin Identity of the caller.
     /// \param data Handle to image native xfer data.
     virtual Result imageNativeXferGet(const Identity& origin, ImageNativeXfer& data) = 0;
 
     /// JPEG compression TWAIN call.
+    /// JPEG 压缩 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data JPEG compression data.
@@ -1679,6 +1826,7 @@ protected:
     }
 
     /// Get JPEG compression TWAIN call.
+    /// 获取 JPEG 压缩 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1689,6 +1837,7 @@ protected:
     }
 
     /// Get default JPEG compression TWAIN call.
+    /// 获取默认的 JPEG 压缩 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1699,6 +1848,7 @@ protected:
     }
 
     /// Set JPEG compression TWAIN call.
+    /// 设置 JPEG 压缩 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1709,6 +1859,7 @@ protected:
     }
 
     /// Reset JPEG compression TWAIN call.
+    /// 重置 JPEG 压缩 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1719,6 +1870,7 @@ protected:
     }
 
     /// Palette8 TWAIN call.
+    /// Palette8 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Palette8 data.
@@ -1758,6 +1910,7 @@ protected:
     }
 
     /// Get Palette8 TWAIN call.
+    /// 获取 Palette8 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1768,6 +1921,7 @@ protected:
     }
 
     /// Get default Palette8 TWAIN call.
+    /// 获取默认的 Palette8 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1778,6 +1932,7 @@ protected:
     }
 
     /// Set Palette8 TWAIN call.
+    /// 设置 Palette8 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1788,6 +1943,7 @@ protected:
     }
 
     /// Reset Palette8 TWAIN call.
+    /// 重置 Palette8 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1798,6 +1954,7 @@ protected:
     }
 
     /// RGB response TWAIN call.
+    /// RGB 响应 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data RGB response data.
@@ -1819,6 +1976,7 @@ protected:
     }
 
     /// Set RGB response TWAIN call.
+    /// 设置 RGB 响应 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1829,6 +1987,7 @@ protected:
     }
 
     /// Reset RGB response TWAIN call.
+    /// 重置 RGB 响应 TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1840,6 +1999,7 @@ protected:
 
 
     /// Root of source audio TWAIN calls.
+    /// 源音频 TWAIN 调用的根。
     /// \param origin Identity of the caller.
     /// \param dat Type of data.
     /// \param msg Message, action to perform.
@@ -1862,6 +2022,7 @@ protected:
     }
 
     /// Audio file xfer TWAIN call.
+    /// 音频文件 xfer TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     virtual Result audioFileXfer(const Identity& origin, Msg msg) {
@@ -1882,6 +2043,7 @@ protected:
     }
 
     /// Get audio file xfer TWAIN call.
+    /// 获取音频文件 xfer TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1891,6 +2053,7 @@ protected:
     }
 
     /// Audio info TWAIN call.
+    /// 音频信息 TWAIN 通话。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Audio info data.
@@ -1907,6 +2070,7 @@ protected:
     }
 
     /// Get audio info TWAIN call.
+    /// 获取音频信息 TWAIN 通话。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1917,6 +2081,7 @@ protected:
     }
 
     /// Audio native xfer TWAIN call.
+    /// 音频原生 转发 TWAIN 调用。
     /// \param origin Identity of the caller.
     /// \param msg Message, action to perform.
     /// \param data Handle to audio native xfer data.
@@ -1938,6 +2103,7 @@ protected:
     }
 
     /// Get audio native xfer TWAIN call.
+    /// 获取音频原生 xfer TWAIN 调用。
     /// Always called in correct state.
     /// Default implementation does nothing.
     /// \param origin Identity of the caller.
@@ -1986,6 +2152,7 @@ private:
     }
 
     Result callRoot(Identity* origin, DataGroup dg, Dat dat, Msg msg, void* data) noexcept {
+        qDebug() << "callRoot       DataGroup  Dat  Msg: " + QString::number(UInt16(dg)) + "    " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
         if (!origin) {
             return badProtocol();
         }
@@ -2007,6 +2174,7 @@ private:
     }
 
     Result callCapability(const Identity& origin, DataGroup dg, Dat dat, Msg msg, void* data) {
+        qDebug() << "callCapability DataGroup  Dat  Msg: " + QString::number(UInt16(dg)) + "    " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
         // it is the responsibility of the APP to free capability handle
         // we must assume the APP does not set the handle to zero after freeing it
         // that would break capability (handle) move-assignment operator
@@ -2051,7 +2219,7 @@ private:
 
     static Result staticCall(typename std::list<Derived>::iterator src, Identity* origin,
                              DataGroup dg, Dat dat, Msg msg, void* data) {
-
+        qDebug() << "staticCall     DataGroup  Dat  Msg: " + QString::number(UInt16(dg)) + "    " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
 #if defined(TWPP_DETAIL_OS_WIN32)
         if (!g_entry) {
             if (!g_dsm && !g_dsm.load(true)) {
@@ -2084,6 +2252,7 @@ private:
     }
 
     static Result staticControl(Identity* origin, DataGroup dg, Dat dat, Msg msg, void* data) {
+        qDebug() << "staticControl  DataGroup  Dat  Msg: " + QString::number(UInt16(dg)) + "    " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
         if (dg != DataGroup::Control) {
             return seqError();
         }
@@ -2168,7 +2337,9 @@ private:
 
 public:
     /// TWAIN entry, do not call from data source.
+    /// TWAIN 条目，不要从数据源调用。
     static ReturnCode entry(Identity* origin, DataGroup dg, Dat dat, Msg msg, void* data) noexcept {
+        qDebug() << "entry          DataGroup  Dat  Msg: " + QString::number(UInt16(dg)) + "    " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
         auto src = find(origin);
         try {
             auto rc = src == g_sources.end() ?
