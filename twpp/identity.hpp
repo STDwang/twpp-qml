@@ -1,4 +1,4 @@
-/*
+﻿/*
 
 The MIT License (MIT)
 
@@ -58,6 +58,7 @@ public:
         m_country(country), m_info(info){}
 
     /// Major version number of the source or application.
+    /// 源或应用程序的主要版本号。
     constexpr UInt16 majorNumber() const noexcept{
         return m_majorNum;
     }
@@ -68,6 +69,7 @@ public:
     }
 
     /// Minor version number of the source or application.
+    /// 源或应用程序的次要版本号。
     constexpr UInt16 minorNumber() const noexcept{
         return m_minorNum;
     }
@@ -78,6 +80,7 @@ public:
     }
 
     /// Language of the source or application.
+    /// 源或应用程序的语言。
     constexpr Language language() const noexcept{
         return m_language;
     }
@@ -88,6 +91,7 @@ public:
     }
 
     /// Original country of the source or application.
+    /// 源或应用程序的原始国家/地区。
     constexpr Country country() const noexcept{
         return m_country;
     }
@@ -98,6 +102,7 @@ public:
     }
 
     /// Additional version information of the source or application.
+    /// 源或应用程序的附加版本信息。
     constexpr const Str32& info() const noexcept{
         return m_info;
     }
@@ -135,6 +140,10 @@ public:
     /// ID is set to zero.
     /// TWAIN protocol is always Detail::ProtoMajor and Detail::ProtoMinor.
     /// Supported group always contains DG::Control and V2.
+    /// 创建默认初始化的标识。
+    /// ID 设置为零。
+    /// TWAIN 协议总是 Detail::ProtoMajor 和 Detail::ProtoMinor。
+    /// 支持的组总是包含 DG::Control 和 V2。
     constexpr Identity() noexcept :
         m_id(), m_protoMaj(Detail::ProtoMajor), m_protoMin(Detail::ProtoMinor),
         m_groups(DataGroup::Control | Detail::identV2){}
@@ -143,6 +152,10 @@ public:
     /// ID is set to zero.
     /// TWAIN protocol is always Detail::ProtoMajor and Detail::ProtoMinor.
     /// Supported group always contains DG::Control and V2.
+    /// 创建使用提供的值初始化的标识。
+    /// ID 设置为零。
+    /// TWAIN 协议总是 Detail::ProtoMajor 和 Detail::ProtoMinor。
+    /// 支持的组总是包含 DG::Control 和 V2。
     constexpr Identity(
             const Version& version,
             DataGroup group,
@@ -154,6 +167,7 @@ public:
         m_manuf(manufacturer), m_prodFamily(productFamily), m_prodName(productName){}
 
     /// Creates identity initialized with supplied values.
+    /// 创建使用提供的值初始化的标识。
     constexpr Identity(
             Id id,
             const Version& version,
@@ -168,16 +182,19 @@ public:
         m_prodName(productName){}
 
     /// DSM-supplied ID of this identity.
+    /// 此身份的 DSM 提供的 ID。
     constexpr Id id() const{
         return m_id;
     }
 
     /// Version information.
+    /// 版本信息。
     constexpr const Version& version() const noexcept{
         return m_version;
     }
 
     /// Whether a data group is supported.
+    /// 是否支持数据组。
     constexpr bool supports(DataGroup group) const noexcept{
         return (m_groups & group) != 0;
     }
@@ -199,32 +216,39 @@ public:
 
     /// The manufacturer.
     /// Manufacturer and product name uniquely identify a source.
+    /// 生产厂家。
+    /// 制造商和产品名称唯一标识一个来源。
     constexpr const Str32& manufacturer() const noexcept{
         return m_manuf;
     }
 
     /// The product name.
     /// Manufacturer and product name uniquely identify a source.
+    /// 产品名称
     constexpr const Str32& productName() const noexcept{
         return m_prodName;
     }
 
     /// The product family.
+    /// 产品系列
     constexpr const Str32& productFamily() const noexcept{
         return m_prodFamily;
     }
 
     /// Raw data group flags.
+    /// 原始数据组标志
     constexpr UInt32 dataGroupsRaw() const noexcept{
         return m_groups;
     }
 
     /// TWAIN protocol major version.
+    /// TWAIN 协议主要版本。
     constexpr UInt16 protocolMajor() const noexcept{
         return m_protoMaj;
     }
 
     /// TWAIN protocol minor version.
+    /// TWAIN 协议次要版本。
     constexpr UInt16 protocolMinor() const noexcept{
         return m_protoMin;
     }

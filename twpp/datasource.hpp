@@ -272,6 +272,7 @@ protected:
     /// 设置当前的 TWAIN 状态，小心使用。
     void setState(DsState state) noexcept {
         m_state = state;
+        qDebug()<<UINT16(m_state);
     }
 
     /// Sets current source identity, use with care.
@@ -364,6 +365,18 @@ protected:
     /// \param data The data, may be null.
     virtual Result call(const Identity& origin, DataGroup dg, Dat dat, Msg msg, void* data) {
         qDebug()<<"call           DataGroup  Dat  Msg: " + QString::number(UInt16(dg)) + "    " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
+        qDebug()<<UINT32(origin.id());
+        qDebug()<<UINT16(origin.version().majorNumber())
+               <<UINT16(origin.version().minorNumber())
+              <<UINT16(origin.version().language())
+             <<UINT16(origin.version().country())
+            <<origin.version().info().data();
+        qDebug()<<UINT16(origin.protocolMajor());
+        qDebug()<<UINT16(origin.protocolMinor());
+        qDebug()<<UINT32(origin.dataGroupsRaw());
+        qDebug()<<origin.manufacturer().data();
+        qDebug()<<origin.productFamily().data();
+        qDebug()<<origin.productName().data();
         switch (dg) {
         case DataGroup::Control:
             return control(origin, dat, msg, data);
@@ -392,7 +405,6 @@ protected:
             // all control triplets require data
             return badValue();
         }
-
         switch (dat) {
         case Dat::Capability:
             return capability(origin, msg, *static_cast<Capability*>(data));
@@ -2300,6 +2312,18 @@ private:
                 ident = Identity(ident.id(), def.version(), def.protocolMajor(),
                                  def.protocolMinor(), def.dataGroupsRaw(), def.manufacturer(),
                                  def.productFamily(), def.productName());
+                qDebug()<<UINT32(ident.id());
+                qDebug()<<UINT16(def.version().majorNumber())
+                       <<UINT16(def.version().minorNumber())
+                      <<UINT16(def.version().language())
+                     <<UINT16(def.version().country())
+                    <<def.version().info().data();
+                qDebug()<<UINT16(def.protocolMajor());
+                qDebug()<<UINT16(def.protocolMinor());
+                qDebug()<<UINT32(def.dataGroupsRaw());
+                qDebug()<<def.manufacturer().data();
+                qDebug()<<def.productFamily().data();
+                qDebug()<<def.productName().data();
 
                 return success();
             }

@@ -32,7 +32,4 @@ DISTFILES += \
 RESOURCES += \
     qml.qrc
 
-FORMS += \
-    scandialog.ui
-
 LIBS += -lUser32
