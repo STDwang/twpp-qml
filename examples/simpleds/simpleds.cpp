@@ -196,6 +196,7 @@ Result SimpleDs::capabilityResetAll(const Identity& origin) {
 }
 
 Result SimpleDs::capabilitySet(const Identity& origin, Capability& data) {
+    qDebug()<<"capabilitySet:  "<<UINT16(data.type());
     return capCommon(origin, Msg::Set, data);
 }
 
@@ -579,6 +580,7 @@ Result SimpleDs::imageNativeXferGet(const Identity&, ImageNativeXfer& data) {
     }
 
     // it does not get easier than that if we already have BMP
+    // 如果我们已经有了 BMP，那就再简单不过了
     data = ImageNativeXfer(bmpSize());
 
     std::copy(bmpBegin(), bmpEnd(), data.data<char>().data());

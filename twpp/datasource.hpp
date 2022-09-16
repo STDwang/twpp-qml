@@ -365,18 +365,18 @@ protected:
     /// \param data The data, may be null.
     virtual Result call(const Identity& origin, DataGroup dg, Dat dat, Msg msg, void* data) {
         qDebug()<<"call           DataGroup  Dat  Msg: " + QString::number(UInt16(dg)) + "    " + QString::number(UInt16(dat)) + "     " + QString::number(UInt16(msg));
-        qDebug()<<UINT32(origin.id());
-        qDebug()<<UINT16(origin.version().majorNumber())
-               <<UINT16(origin.version().minorNumber())
-              <<UINT16(origin.version().language())
-             <<UINT16(origin.version().country())
-            <<origin.version().info().data();
-        qDebug()<<UINT16(origin.protocolMajor());
-        qDebug()<<UINT16(origin.protocolMinor());
-        qDebug()<<UINT32(origin.dataGroupsRaw());
-        qDebug()<<origin.manufacturer().data();
-        qDebug()<<origin.productFamily().data();
-        qDebug()<<origin.productName().data();
+//        qDebug()<<UINT32(origin.id());
+//        qDebug()<<UINT16(origin.version().majorNumber())
+//               <<UINT16(origin.version().minorNumber())
+//              <<UINT16(origin.version().language())
+//             <<UINT16(origin.version().country())
+//            <<origin.version().info().data();
+//        qDebug()<<UINT16(origin.protocolMajor());
+//        qDebug()<<UINT16(origin.protocolMinor());
+//        qDebug()<<UINT32(origin.dataGroupsRaw());
+//        qDebug()<<origin.manufacturer().data();
+//        qDebug()<<origin.productFamily().data();
+//        qDebug()<<origin.productName().data();
         switch (dg) {
         case DataGroup::Control:
             return control(origin, dat, msg, data);
@@ -2149,10 +2149,13 @@ private:
         if (Twpp::success(rc)) {
             switch (msg) {
             case Msg::XferReady:
+                qDebug()<<"ToApp:"<<"XferReady";
                 setState(DsState::XferReady);
                 break;
             case Msg::CloseDsOk:
+                qDebug()<<"ToApp:"<<"CloseDsOk";
             case Msg::CloseDsReq:
+                qDebug()<<"ToApp:"<<"CloseDsReq";
                 setState(DsState::Enabled);
                 break;
             default:
@@ -2312,18 +2315,18 @@ private:
                 ident = Identity(ident.id(), def.version(), def.protocolMajor(),
                                  def.protocolMinor(), def.dataGroupsRaw(), def.manufacturer(),
                                  def.productFamily(), def.productName());
-                qDebug()<<UINT32(ident.id());
-                qDebug()<<UINT16(def.version().majorNumber())
-                       <<UINT16(def.version().minorNumber())
-                      <<UINT16(def.version().language())
-                     <<UINT16(def.version().country())
-                    <<def.version().info().data();
-                qDebug()<<UINT16(def.protocolMajor());
-                qDebug()<<UINT16(def.protocolMinor());
-                qDebug()<<UINT32(def.dataGroupsRaw());
-                qDebug()<<def.manufacturer().data();
-                qDebug()<<def.productFamily().data();
-                qDebug()<<def.productName().data();
+//                qDebug()<<UINT32(ident.id());
+//                qDebug()<<UINT16(def.version().majorNumber())
+//                       <<UINT16(def.version().minorNumber())
+//                      <<UINT16(def.version().language())
+//                     <<UINT16(def.version().country())
+//                    <<def.version().info().data();
+//                qDebug()<<UINT16(def.protocolMajor());
+//                qDebug()<<UINT16(def.protocolMinor());
+//                qDebug()<<UINT32(def.dataGroupsRaw());
+//                qDebug()<<def.manufacturer().data();
+//                qDebug()<<def.productFamily().data();
+//                qDebug()<<def.productName().data();
 
                 return success();
             }
