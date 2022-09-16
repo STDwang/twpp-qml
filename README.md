@@ -323,3 +323,7 @@ Each TWAIN operation returns `Result`. It is a combination of `ReturnCode` and `
 `SourceFromThis` takes care of all calls to an unopened DS. Once a request to open it is made, a new instance of the derived class is created (`MySource`). Instance deletion is automatically performed after successfuly closing the session. There might be several opened instances of the same DS at the same time.
 
 A method `call` is the entrypoint of DS instance. It routes the TWAIN call according to its `DataGroup` to `control`, `image`, or `audio` methods. These first check the validity of the data, and call the handler of the data type (`Dat`), e. g. capabilities are handled by `capability`. Data type handler is responsible for assuring preconditions and postconditions of action handlers (mainly state checks and transitions). Now, an action handler corresponding to `Msg` parameter is called (e. g. `capabilityGet`). This is the default code path in `SourceFromThis`. All these handlers from the root (`call`) to the action handlers are `virtual`, and may be overriden to provide special functionality. Most DS implementations will need to override only action handlers.
+
+## Mind Mapping
+
+![Twain](C:\Users\19462\Desktop\handi\工作报告\Twain.png)
