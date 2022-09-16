@@ -326,4 +326,4 @@ A method `call` is the entrypoint of DS instance. It routes the TWAIN call accor
 
 ## Mind Mapping
 
-![Twain](C:\Users\19462\Desktop\handi\工作报告\Twain.png)
+![Twain](https://user-images.githubusercontent.com/66109192/190536503-3a291208-2a25-4fb1-965a-8045609ed9d1.png)
